@@ -19,7 +19,7 @@ use typst_library::foundations::{
 };
 use typst_library::layout::PageRanges;
 use typst_library::model::{
-    ArtifactElem, TableCell, TableCellKind, TableElem, TableHeaderScope,
+    ArtifactElem, LayerElem, TableCell, TableCellKind, TableElem, TableHeaderScope,
 };
 use typst_macros::{Cast, cast, elem, func, scope};
 use typst_syntax::Spanned;
@@ -365,6 +365,9 @@ impl PdfFormat {
 
     #[elem]
     type ArtifactElem;
+
+    #[elem]
+    type LayerElem;
 
     /// A summary of the purpose and structure of a complex table.
     ///

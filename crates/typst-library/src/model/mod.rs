@@ -11,6 +11,7 @@ mod enum_;
 mod figure;
 mod footnote;
 mod heading;
+mod layer;
 mod link;
 mod list;
 #[path = "numbering.rs"]
@@ -34,6 +35,7 @@ pub use self::enum_::*;
 pub use self::figure::*;
 pub use self::footnote::*;
 pub use self::heading::*;
+pub use self::layer::*;
 pub use self::link::*;
 pub use self::list::*;
 pub use self::numbering_::*;

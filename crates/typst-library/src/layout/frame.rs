@@ -9,7 +9,7 @@ use typst_utils::{LazyHash, Numeric};
 use crate::foundations::Label;
 use crate::introspection::{Location, Tag};
 use crate::layout::{Abs, Axes, FixedAlignment, Point, Size, Transform};
-use crate::model::Destination;
+use crate::model::{Destination, Layer};
 use crate::text::TextItem;
 use crate::visualize::{Color, Curve, FixedStroke, Geometry, Image, Paint, Shape};
 
@@ -372,6 +372,12 @@ impl Frame {
         }
     }
 
+    pub fn set_layer(&mut self, layer: Layer) {
+        if !self.is_empty() {
+            self.group(|g| g.layer = Some(layer));
+        }
+    }
+
     /// Wrap the frame's contents in a group and modify that group with `f`.
     fn group<F>(&mut self, f: F)
     where
@@ -527,6 +533,7 @@ pub struct GroupItem {
     /// thought of as inserting the elements at the end but still inside of the
     /// parent.
     pub parent: Option<FrameParent>,
+    pub layer: Option<Layer>,
 }
 
 impl GroupItem {
@@ -538,6 +545,7 @@ impl GroupItem {
             clip: None,
             label: None,
             parent: None,
+            layer: None,
         }
     }
 }

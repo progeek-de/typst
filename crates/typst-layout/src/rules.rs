@@ -15,7 +15,7 @@ use typst_library::layout::{
     Size, Sizing, SkewElem, Spacing, StackChild, StackElem, TrackSizings, VElem,
 };
 use typst_library::math::EquationElem;
-use typst_library::model::{ArtifactElem, ArtifactKind, PdfMarkerTag};
+use typst_library::model::{ArtifactElem, ArtifactKind, Layer, LayerElem, PdfMarkerTag};
 use typst_library::model::{
     Attribution, BibliographyElem, CiteElem, CiteGroup, CslIndentElem, CslLightElem,
     Destination, DirectLinkElem, DividerElem, EmphElem, EnumElem, FigureCaption,
@@ -107,6 +107,7 @@ pub fn register(rules: &mut NativeRuleMap) {
 
     // PDF.
     rules.register(Paged, ARTIFACT_RULE);
+    rules.register(Paged, LAYER_RULE);
     rules.register(Paged, PDF_MARKER_TAG_RULE);
 }
 
@@ -824,5 +825,13 @@ const EQUATION_RULE: ShowFn<EquationElem> = |elem, _, styles| {
 };
 
 const ARTIFACT_RULE: ShowFn<ArtifactElem> = |elem, _, _| Ok(elem.body.clone());
+
+const LAYER_RULE: ShowFn<LayerElem> = |elem, _, styles| {
+    let layer = Layer {
+        name: elem.name.clone(),
+        view: elem.view.get(styles),
+    };
+    Ok(elem.body.clone().set(LayerElem::current, Some(layer)))
+};
 
 const PDF_MARKER_TAG_RULE: ShowFn<PdfMarkerTag> = |elem, _, _| Ok(elem.body.clone());

@@ -1534,6 +1534,8 @@ a1bdb99a562d2db97dace81f9b42c711 par-show-children
 a64fdf9e65b08988b5332f472e0810bc par-spacing-and-first-line-indent
 c8dfdb306c5bfaef407e5d566743952b par-trailing-whitespace
 3a1ed824e4aad2d224bf8b639543dbac parser-backtracking-destructuring-whitespace
+eee5835c346b38427c84a658bed90ce3 pdf-layer
+6253a0c9f9c8ca1ed862851764e2b03d pdf-layer-page-background
 8feb968e768955c679562662c69c7ee0 pdf-validation-multiple-standards
 bf3e8999bb8e0e5b671dea8b92af3f16 place-basic
 10361af84964adcd8ecf5fb40ac66030 place-block-spacing

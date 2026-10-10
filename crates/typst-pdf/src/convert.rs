@@ -7,6 +7,7 @@ use krilla::destination::NamedDestination;
 use krilla::embed::EmbedError;
 use krilla::error::{KrillaError, LimitError};
 use krilla::geom::{PathBuilder, Rect};
+use krilla::optional_content::OptionalContentGroupId;
 use krilla::page::{PageLabel, PageSettings};
 use krilla::pdf::PdfError;
 use krilla::surface::Surface;
@@ -23,7 +24,7 @@ use typst_library::format::Complete;
 use typst_library::foundations::{NativeElement, Repr, Smart};
 use typst_library::introspection::{Introspector, Location, PagedPosition, Tag};
 use typst_library::layout::{Abs, Frame, FrameItem, GroupItem, Sides, Size, Transform};
-use typst_library::model::{Document as _, HeadingElem, LateLinkResolver};
+use typst_library::model::{Document as _, HeadingElem, LateLinkResolver, Layer};
 use typst_library::text::FontInstance;
 use typst_library::visualize::{Geometry, Paint, SpotColorantName};
 use typst_syntax::Span;
@@ -301,6 +302,7 @@ pub(crate) struct GlobalContext<'a> {
     pub(crate) page_index_converter: PageIndexConverter,
     /// Tagged PDF context.
     pub(crate) tags: Tags,
+    pub(crate) layers: FxHashMap<Layer, OptionalContentGroupId>,
 }
 
 impl<'a> GlobalContext<'a> {
@@ -323,6 +325,7 @@ impl<'a> GlobalContext<'a> {
             image_spans: FxHashSet::default(),
             page_index_converter,
             tags,
+            layers: FxHashMap::default(),
         }
     }
 }
@@ -403,6 +406,11 @@ pub(crate) fn handle_group(
     fc.state_mut().pre_concat(group.transform);
 
     tags::group(gc, fc, surface, group.parent, |gc, fc, surface| {
+        if let Some(layer) = &group.layer {
+            let id = optional_content_group(gc, surface, layer);
+            surface.start_optional_content(id);
+        }
+
         let clip_path = group
             .clip
             .as_ref()
@@ -424,12 +432,26 @@ pub(crate) fn handle_group(
             surface.pop();
         }
 
+        if group.layer.is_some() {
+            surface.end_optional_content();
+        }
+
         res
     })?;
 
     fc.pop();
 
     Ok(())
+}
+
+fn optional_content_group(
+    gc: &mut GlobalContext,
+    surface: &mut Surface,
+    layer: &Layer,
+) -> OptionalContentGroupId {
+    *gc.layers
+        .entry(layer.clone())
+        .or_insert_with(|| surface.add_optional_content_group(&layer.name, layer.view))
 }
 
 /// Finish a krilla document and handle export errors.
@@ -779,6 +801,9 @@ fn convert_validation_error(
                     eco_format!(
                         "{prefix} table header cell cannot be accessibly tagged in {pdf_version} files"
                     )
+                }
+                VersionedFeature::OptionalContent => {
+                    eco_format!("{prefix} layers cannot be used in {pdf_version} files")
                 }
             };
 

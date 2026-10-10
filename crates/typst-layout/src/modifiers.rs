@@ -1,6 +1,6 @@
-use typst_library::foundations::StyleChain;
+use typst_library::foundations::{StyleChain, Styles};
 use typst_library::layout::{Abs, Fragment, Frame, FrameItem, HideElem, Point, Sides};
-use typst_library::model::{Destination, LinkElem, ParElem};
+use typst_library::model::{Destination, Layer, LayerElem, LinkElem, ParElem};
 
 /// Frame-level modifications resulting from styles that do not impose any
 /// layout structure.
@@ -17,12 +17,14 @@ use typst_library::model::{Destination, LinkElem, ParElem};
 /// Currently existing frame modifiers are:
 /// - `HideElem::hidden`
 /// - `LinkElem::dests`
+/// - `LayerElem::current`
 #[derive(Debug, Clone)]
 pub struct FrameModifiers {
     /// A destination to link to.
     dest: Option<Destination>,
     /// Whether the contents of the frame should be hidden.
     hidden: bool,
+    layer: Option<Box<Layer>>,
 }
 
 impl FrameModifiers {
@@ -31,6 +33,7 @@ impl FrameModifiers {
         Self {
             dest: styles.get_cloned(LinkElem::current),
             hidden: styles.get(HideElem::hidden),
+            layer: styles.get_cloned(LayerElem::current).map(Box::new),
         }
     }
 }
@@ -108,6 +111,10 @@ fn modify_frame(
     if modifiers.hidden {
         frame.hide();
     }
+
+    if let Some(layer) = &modifiers.layer {
+        frame.set_layer(Layer::clone(layer));
+    }
 }
 
 /// Performs layout and modification in one step.
@@ -129,8 +136,15 @@ where
     let reset;
     let outer = styles;
     let mut styles = styles;
-    if modifiers.dest.is_some() {
-        reset = LinkElem::current.set(None).wrap();
+    if modifiers.dest.is_some() || modifiers.layer.is_some() {
+        let mut map = Styles::new();
+        if modifiers.dest.is_some() {
+            map.set(LinkElem::current, None);
+        }
+        if modifiers.layer.is_some() {
+            map.set(LayerElem::current, None);
+        }
+        reset = map;
         styles = outer.chain(&reset);
     }
 
